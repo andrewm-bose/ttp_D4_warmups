@@ -1,4 +1,6 @@
---For this one, there is no dataset we're working with here, so you have to look at the structure of the two tables (attached image), 
+-- See the attached image for the question.
+
+-For this one, there is no dataset we're working with here, so you have to look at the structure of the two tables (attached image), 
 --and come up with the query "by hand" (write/type it out).
 --HINTS:
 --For this question, be sure to write the query to include users who made no comments in January 2019.

@@ -37,3 +37,46 @@ SELECT comment_count,
 	COUNT(DISTINCT comment_count) AS frequency
 FROM user_comment_counts_jan2019
 GROUP BY comment_count
+
+
+
+-- MORE ROBUST VERSION
+WITH user_comment_counts_jan2019 AS (
+    SELECT users.id, 
+    	COUNT(user_comments.user_id) AS comment_count,
+	FLOOR(COUNT(user_comments.user_id)/10)*10 AS bin -- this will create 10-wide bins
+    FROM users
+    LEFT JOIN user_comments
+        ON users.id = user_comments.user_id
+    WHERE created_at BETWEEN '2019-01-01' AND '2019-01-31'
+    GROUP BY user.id
+)
+
+SELECT bin, 
+	COUNT(bin) AS frequency
+FROM user_comment_counts_jan2019
+ORDER by bin ASC;
+
+-- EVEN MORE ROBUST (NOT Tested) - have bins even if its empty
+WITH user_comment_counts_jan2019 AS (
+    SELECT users.id, 
+    	COUNT(user_comments.user_id) AS comment_count,
+	FLOOR(COUNT(user_comments.user_id)/10)*10 AS bin -- this will create 10-wide bins
+    FROM users
+    LEFT JOIN user_comments
+        ON users.id = user_comments.user_id
+    WHERE created_at BETWEEN '2019-01-01' AND '2019-01-31'
+    GROUP BY user.id
+),
+series as ( --create a sequence of 0,10,20,30....
+SELECT ((ROW_NUMBER() OVER())-1)*10 AS bin
+FROM user_comments
+)
+
+SELECT bin, 
+	COUNT(bin) AS frequency
+FROM series LEFT JOIN user_comment_counts_jan2019 as uc USING (bin)
+WHERE bin < (SELECT MAX(uc.comment_count), FROM user_comments_counts_jan2019 as uc) as max_comments --choose max bin
+GROUP BY bin
+ORDER by bin ASC;
+
